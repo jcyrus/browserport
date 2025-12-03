@@ -7,18 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-12-03
+
 ### Added
 
 - **Tray Application Mode**: Converted app to run as a background service.
 - **System Tray**: Added system tray/menu bar icon with context menu (About, Quit).
 - **Window Management**: App is now hidden from Dock (macOS) and Taskbar (Windows/Linux) until activated.
 - **Tray Assets**: Added new tray icon assets (16x16, 32x32).
+- **Security Policy**: Added SECURITY.md with vulnerability reporting guidelines.
 
 ### Changed
 
 - Refreshed application icons using high-resolution source files.
 - Switched to `iconutil` for macOS icon generation to ensure crisp rendering on Retina displays.
 - App no longer quits when all windows are closed (to support background tray operation).
+- About dialog now uses dynamic version from package.json.
+- Tray icon uses template image on macOS for automatic theme adaptation.
+
+### Fixed
+
+- Added safety check to quit app if tray creation fails (prevents users from being stuck).
+- Added validation for tray icon path to prevent crashes if assets are missing.
+- Refactored About dialog to use async/await pattern for better error handling.
 
 ## [0.1.1] - 2025-12-03
 
