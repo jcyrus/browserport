@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import fs from 'node:fs'
 import { version } from '../../package.json'
 import { BrowserManager } from './browserManager'
 
@@ -105,8 +106,22 @@ if (gotTheLock) {
 }
 
 function createTray() {
-  const iconPath = path.join(process.env.VITE_PUBLIC ?? '', 'tray.png')
+  const publicDir = process.env.VITE_PUBLIC
+  if (!publicDir) {
+    console.error('VITE_PUBLIC environment variable is not defined')
+    return
+  }
+
+  const iconPath = path.join(publicDir, 'tray.png')
+  
+  if (!fs.existsSync(iconPath)) {
+    console.error(`Tray icon not found at: ${iconPath}`)
+    return
+  }
+
   const icon = nativeImage.createFromPath(iconPath)
+  
+  // Use template image for macOS to adapt to theme
   if (process.platform === 'darwin') {
     icon.setTemplateImage(true)
   }
