@@ -88,9 +88,6 @@ if (gotTheLock) {
 
   app.on('window-all-closed', () => {
     // Don't quit when window is closed, keep tray running
-    // if (process.platform !== 'darwin') {
-    //   app.quit()
-    // }
   })
 
   app.on('activate', () => {
