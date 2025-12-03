@@ -141,10 +141,7 @@ function createTray() {
     if (mainWindow?.isVisible()) {
       mainWindow.hide()
     } else {
-      // If we want to show it, we might need a URL or just show the empty state?
-      // For now, let's just focus if visible, or maybe do nothing if no URL pending.
-      // The user asked for "About menu when they click and exit", which is covered by context menu.
-      // Usually left click also opens menu on macOS if no action is defined, or we can pop the menu.
+      // Show context menu on left-click for consistency across platforms
       tray?.popUpContextMenu()
     }
   })
