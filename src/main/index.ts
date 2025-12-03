@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { version } from '../../package.json'
 import { BrowserManager } from './browserManager'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -95,6 +96,10 @@ if (gotTheLock) {
       createWindow()
     }
   })
+
+  app.on('before-quit', () => {
+    tray?.destroy()
+  })
 } else {
   app.quit()
 }
@@ -118,7 +123,7 @@ function createTray() {
         
         dialog.showMessageBox({
           title: 'About BrowserPort',
-          message: 'BrowserPort v0.1.1',
+          message: `BrowserPort v${version}`,
           detail: 'A cross-platform browser picker.\n\nCreated by @jCyrus',
           buttons: ['OK'],
           icon: appIcon
