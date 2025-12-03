@@ -1,6 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import fs from 'node:fs'
+import { version } from '../../package.json'
 import { BrowserManager } from './browserManager'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -19,6 +21,7 @@ process.env.VITE_PUBLIC = app.isPackaged
   : path.join(process.env.DIST, '../public')
 
 let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
 let pendingUrl: string | null = null
 const browserManager = new BrowserManager()
 
@@ -43,6 +46,14 @@ if (gotTheLock) {
   // Use async IIFE for initialization
   void (async () => {
     await app.whenReady()
+
+    // Hide from dock immediately (macOS)
+    if (process.platform === 'darwin') {
+      app.dock.hide()
+    }
+
+    // Create Tray Icon
+    createTray()
 
     // Detect browsers on startup
     await browserManager.detectBrowsers()
@@ -78,7 +89,9 @@ if (gotTheLock) {
   })()
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
+    // Only keep running if tray exists, otherwise quit
+    // This prevents users from being stuck if tray creation fails
+    if (!tray) {
       app.quit()
     }
   })
@@ -88,8 +101,73 @@ if (gotTheLock) {
       createWindow()
     }
   })
+
+  app.on('before-quit', () => {
+    tray?.destroy()
+  })
 } else {
   app.quit()
+}
+
+function createTray() {
+  const publicDir = process.env.VITE_PUBLIC
+  if (!publicDir) {
+    console.error('VITE_PUBLIC environment variable is not defined')
+    return
+  }
+
+  const iconPath = path.join(publicDir, 'tray.png')
+  
+  if (!fs.existsSync(iconPath)) {
+    console.error(`Tray icon not found at: ${iconPath}`)
+    return
+  }
+
+  const icon = nativeImage.createFromPath(iconPath)
+  
+  // Use template image for macOS to adapt to theme
+  if (process.platform === 'darwin') {
+    icon.setTemplateImage(true)
+  }
+  
+  tray = new Tray(icon)
+  tray.setToolTip('BrowserPort')
+
+  const contextMenu = Menu.buildFromTemplate([
+    { 
+      label: 'About BrowserPort', 
+      click: async () => {
+        const appIconPath = path.join(process.env.VITE_PUBLIC ?? '', 'app-icon.png')
+        const appIcon = nativeImage.createFromPath(appIconPath)
+        
+        try {
+          await dialog.showMessageBox({
+            title: 'About BrowserPort',
+            message: `BrowserPort v${version}`,
+            detail: 'A cross-platform browser picker.\n\nCreated by @jCyrus',
+            buttons: ['OK'],
+            icon: appIcon
+          })
+        } catch (error) {
+          console.error('Failed to show about dialog:', error)
+        }
+      } 
+    },
+    { type: 'separator' },
+    { label: 'Quit', click: () => app.quit() }
+  ])
+
+  tray.setContextMenu(contextMenu)
+  
+  // Optional: Toggle window on click (if not right-click)
+  tray.on('click', () => {
+    if (mainWindow?.isVisible()) {
+      mainWindow.hide()
+    } else {
+      // Show context menu on left-click for consistency across platforms
+      tray?.popUpContextMenu()
+    }
+  })
 }
 
 function createWindow() {
@@ -102,6 +180,7 @@ function createWindow() {
     alwaysOnTop: true,
     center: true,
     show: false, // Don't show until ready
+    skipTaskbar: true, // Hide from taskbar (Windows/Linux)
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
@@ -165,11 +244,8 @@ function showWindowWithUrl(url: string) {
   // Show and focus the window
   mainWindow.show()
   mainWindow.focus()
-
-  // Ensure keyboard focus
-  if (process.platform === 'darwin') {
-    app.dock.show()
-  }
+  
+  // Note: We removed app.dock.show() to keep it hidden
 }
 
 // IPC Handlers
