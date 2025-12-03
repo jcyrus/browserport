@@ -89,7 +89,11 @@ if (gotTheLock) {
   })()
 
   app.on('window-all-closed', () => {
-    // Don't quit when window is closed, keep tray running
+    // Only keep running if tray exists, otherwise quit
+    // This prevents users from being stuck if tray creation fails
+    if (!tray) {
+      app.quit()
+    }
   })
 
   app.on('activate', () => {
