@@ -51,6 +51,10 @@ pnpm electron:dev
 pnpm electron:build
 ```
 
+### Code Signing (macOS)
+
+For proper distribution on macOS without security warnings, the app must be code-signed and notarized with an Apple Developer certificate.
+
 ## Project Structure
 
 ```

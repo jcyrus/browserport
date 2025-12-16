@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Apple Code Signing Configuration**: Added electron-builder configuration for macOS code signing and notarization.
+  - Implementation: `package.json` (mac.hardenedRuntime, mac.notarize)
+  - Impact: Resolves macOS Gatekeeper malware warnings on macOS 26.2+
+- **Entitlements File**: Added `build/entitlements.mac.plist` for hardened runtime requirements.
+- **Code Signing Documentation**: Updated GitHub Actions workflow to support automated code signing and notarization.
+
+### Changed
+
+- **README**: Added code signing section with links to setup guides.
+
 ## [0.1.3] - 2025-12-09
 
 ### Fixed
