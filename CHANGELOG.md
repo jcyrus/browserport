@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implementation: `package.json` (mas target, build:mas script)
   - New Files: `build/entitlements.mac.mas.plist`, `build/entitlements.mac.mas.inherit.plist`
   - Impact: Enables building sandboxed .pkg for Mac App Store submission
+- **MAS Update Redirect**: For Mac App Store builds, update notifications redirect users to the App Store page instead of downloading directly.
 
 ### Changed
 

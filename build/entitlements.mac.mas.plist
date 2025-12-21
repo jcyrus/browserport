@@ -6,6 +6,10 @@
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	
+	<!-- Required for Electron/V8 JavaScript engine JIT compilation -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	
 	<!-- Network access for update checks and browser detection -->
 	<key>com.apple.security.network.client</key>
 	<true/>

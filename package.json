@@ -64,6 +64,9 @@
       "entitlementsInherit": "build/entitlements.mac.plist",
       "notarize": {
         "teamId": "${APPLE_TEAM_ID}"
+      },
+      "extendInfo": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "mas": {

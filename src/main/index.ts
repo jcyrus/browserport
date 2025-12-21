@@ -6,6 +6,7 @@ import {
   Menu,
   nativeImage,
   dialog,
+  shell,
 } from "electron";
 import { autoUpdater, UpdateInfo } from "electron-updater";
 import path from "node:path";
@@ -16,6 +17,12 @@ import { BrowserManager } from "./browserManager";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Detect if running as Mac App Store build (process.mas is set by Electron for MAS builds)
+const isMAS = !!(process as NodeJS.Process & { mas?: boolean }).mas;
+
+// App Store URL - Update this with your actual App Store ID after approval
+const APP_STORE_URL = "macappstore://apps.apple.com/app/id0000000000"; // TODO: Replace with actual App Store ID
 
 // Configure auto-updater
 autoUpdater.autoDownload = false; // User controls when to download
@@ -230,6 +237,24 @@ async function handleUpdateCheck() {
       return;
     }
 
+    // For Mac App Store builds, redirect to App Store instead of downloading
+    if (isMAS) {
+      const response = await dialog.showMessageBox({
+        title: "Update Available",
+        message: `Version ${result.updateInfo.version} is available`,
+        detail: "Would you like to open the App Store to update?",
+        buttons: ["Open App Store", "Later"],
+        defaultId: 0,
+        cancelId: 1,
+      });
+
+      if (response.response === 0) {
+        await shell.openExternal(APP_STORE_URL);
+      }
+      return;
+    }
+
+    // For direct distribution, download and install
     const response = await dialog.showMessageBox({
       title: "Update Available",
       message: `Version ${result.updateInfo.version} is available`,
