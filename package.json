@@ -1,11 +1,11 @@
 {
   "name": "browserport",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A cross-platform browser picker utility",
   "main": "dist-electron/main/index.js",
   "type": "module",
   "author": "jcyrus",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "electron:dev": "vite --mode development",
-    "electron:build": "vite build && electron-builder"
+    "electron:build": "vite build && electron-builder",
+    "build:mas": "tsc && vite build && electron-builder --mac mas"
   },
   "dependencies": {
     "electron-updater": "^6.6.2",
@@ -54,7 +55,8 @@
       "category": "public.app-category.utilities",
       "icon": "build/icons/icon.icns",
       "target": [
-        "dmg"
+        "dmg",
+        "mas"
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -63,6 +65,11 @@
       "notarize": {
         "teamId": "${APPLE_TEAM_ID}"
       }
+    },
+    "mas": {
+      "entitlements": "build/entitlements.mac.mas.plist",
+      "entitlementsInherit": "build/entitlements.mac.mas.inherit.plist",
+      "provisioningProfile": "build/embedded.provisionprofile"
     },
     "dmg": {
       "sign": true

@@ -84,4 +84,4 @@ This application follows Electron security best practices:
 
 ## License
 
-MIT
+BSD-3-Clause

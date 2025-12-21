@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-12-21
+
+### Added
+
+- **Mac App Store Configuration**: Added MAS build target and configuration for App Store distribution.
+  - Implementation: `package.json` (mas target, build:mas script)
+  - New Files: `build/entitlements.mac.mas.plist`, `build/entitlements.mac.mas.inherit.plist`
+  - Impact: Enables building sandboxed .pkg for Mac App Store submission
+
+### Changed
+
+- **License**: Changed from MIT to BSD-3-Clause for attribution requirements.
+
 ## [0.1.4] - 2025-12-16
 
 ### Added
