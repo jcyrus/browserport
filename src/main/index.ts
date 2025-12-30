@@ -109,32 +109,34 @@ if (gotTheLock) {
 
   // App initialization - use event-based approach to avoid blocking
   app.whenReady().then(() => {
-    // Hide from dock immediately (macOS)
-    if (process.platform === "darwin") {
-      app.dock.hide();
+    // Create Tray Icon with error handling
+    try {
+      createTray();
+      console.log("Tray icon created successfully");
+    } catch (err) {
+      console.error("Failed to create tray icon:", err);
     }
-
-    // Create Tray Icon
-    createTray();
 
     // Detect browsers on startup (non-blocking)
     browserManager.detectBrowsers().catch((err) => {
       console.error("Failed to detect browsers:", err);
     });
 
-    // Register as default protocol handler
-    if (process.defaultApp) {
-      if (process.argv.length >= 2) {
-        app.setAsDefaultProtocolClient("http", process.execPath, [
-          path.resolve(process.argv[1] ?? ""),
-        ]);
-        app.setAsDefaultProtocolClient("https", process.execPath, [
-          path.resolve(process.argv[1] ?? ""),
-        ]);
+    // Register as default protocol handler (not allowed in MAS sandbox)
+    if (!isMAS) {
+      if (process.defaultApp) {
+        if (process.argv.length >= 2) {
+          app.setAsDefaultProtocolClient("http", process.execPath, [
+            path.resolve(process.argv[1] ?? ""),
+          ]);
+          app.setAsDefaultProtocolClient("https", process.execPath, [
+            path.resolve(process.argv[1] ?? ""),
+          ]);
+        }
+      } else {
+        app.setAsDefaultProtocolClient("http");
+        app.setAsDefaultProtocolClient("https");
       }
-    } else {
-      app.setAsDefaultProtocolClient("http");
-      app.setAsDefaultProtocolClient("https");
     }
 
     createWindow();
@@ -287,17 +289,31 @@ function createTray() {
   const publicDir = process.env.VITE_PUBLIC;
   if (!publicDir) {
     console.error("VITE_PUBLIC environment variable is not defined");
-    return;
+    console.error("app.isPackaged:", app.isPackaged);
+    console.error("__dirname:", __dirname);
+    throw new Error("VITE_PUBLIC not defined");
   }
 
   const iconPath = path.join(publicDir, "tray.png");
+  console.log("Creating tray with icon path:", iconPath);
 
   if (!fs.existsSync(iconPath)) {
     console.error(`Tray icon not found at: ${iconPath}`);
-    return;
+    // List available files in publicDir for debugging
+    try {
+      const files = fs.readdirSync(publicDir);
+      console.error("Available files in publicDir:", files);
+    } catch (e) {
+      console.error("Failed to list publicDir:", e);
+    }
+    throw new Error(`Tray icon not found: ${iconPath}`);
   }
 
   const icon = nativeImage.createFromPath(iconPath);
+  if (icon.isEmpty()) {
+    console.error("Created icon is empty, path:", iconPath);
+    throw new Error("Tray icon image is empty");
+  }
 
   // Use template image for macOS to adapt to theme
   if (process.platform === "darwin") {
@@ -306,6 +322,7 @@ function createTray() {
 
   tray = new Tray(icon);
   tray.setToolTip("BrowserPort");
+  console.log("Tray created, setting up context menu...");
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -431,8 +448,6 @@ function showWindowWithUrl(url: string) {
   // Show and focus the window
   mainWindow.show();
   mainWindow.focus();
-
-  // Note: We removed app.dock.show() to keep it hidden
 }
 
 // IPC Handlers

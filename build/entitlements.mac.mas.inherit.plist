@@ -6,8 +6,10 @@
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	
-	<!-- Inherit entitlements from parent app (for Electron helper processes) -->
+	<!-- Inherit entitlements from parent app -->
 	<key>com.apple.security.inherit</key>
 	<true/>
 </dict>
 </plist>
+
+

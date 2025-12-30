@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2025-12-31
+
+### Fixed
+
+- **Critical: Default Browser Detection**: Registered app as a handler for `http`, `https`, and `file` URL schemes in MAS builds.
+  - Root Cause: Missing `CFBundleURLTypes` in `Info.plist` caused macOS to not recognize the app as a browser
+  - Impact: App now correctly appears in "Default Browser" selection dropdown in System Settings
+
+## [0.1.11] - 2025-12-30
+
+### Fixed
+
+- **Critical: MAS Entitlements**: Added `allow-jit` and `network.client` to main app entitlements while keeping helper entitlements minimal.
+- **Build Configuration**: Disabled `hardenedRuntime` for MAS builds (conflicts with sandbox).
+- **Launch Issues**: Temporarily removed `LSUIElement` to verify launch behavior.
+
+## [0.1.10] - 2025-12-27
+
+### Fixed
+
+- **Critical: MAS Sandbox Crash**: Reduced entitlements to minimal configuration to match provisioning profile.
+  - Root Cause: App entitlements requested capabilities not in provisioning profile
+  - Impact: Should resolve SYSCALL_SET_USERLAND_PROFILE crash on launch
+
+## [0.1.9] - 2025-12-27
+
+### Fixed
+
+- **Critical: MAS Sandbox Crash**: Fixed SYSCALL_SET_USERLAND_PROFILE crash by removing `com.apple.security.inherit` from helper entitlements.
+  - Root Cause: Combining `inherit` with explicit entitlements causes sandbox initialization failure
+  - Impact: Helper processes now launch correctly without crashing
+
+## [0.1.8] - 2025-12-27
+
+### Fixed
+
+- **MAS Tray Icon**: Added error handling for tray creation to prevent silent failures.
+- **MAS Protocol Registration**: Disabled protocol handler registration for MAS builds (sandbox restriction).
+- **Debug Logging**: Added detailed logging for troubleshooting MAS-specific issues.
+
+## [0.1.7] - 2025-12-24
+
+### Fixed
+
+- **Critical: MAS Blank Window**: Fixed blank window issue in Mac App Store builds by adding `com.apple.security.cs.allow-jit` entitlement to `entitlements.mac.mas.inherit.plist`.
+  - Root Cause: Electron helper processes couldn't execute JavaScript without JIT compilation entitlement
+  - Impact: MAS builds now properly render UI instead of showing blank window
+  - Files Modified: `build/entitlements.mac.mas.inherit.plist`
+- **MAS Helper Process Warnings**: Fixed helper process warnings in TestFlight by adding `LSUIElement: true` to Info.plist.
+  - Root Cause: App was hiding from Dock programmatically instead of declaratively
+  - Impact: Eliminates "differs from previously opened versions" warnings
+  - Files Modified: `package.json`, `src/main/index.ts`
+
+### Changed
+
+- **Build Configuration**: Updated MAS build to create universal binaries (x64 + arm64) by default.
+
 ## [0.1.5] - 2025-12-21
 
 ### Added

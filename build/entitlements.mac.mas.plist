@@ -13,9 +13,6 @@
 	<!-- Network access for update checks and browser detection -->
 	<key>com.apple.security.network.client</key>
 	<true/>
-	
-	<!-- Allow opening URLs in other applications -->
-	<key>com.apple.security.automation.apple-events</key>
-	<true/>
 </dict>
 </plist>
+
