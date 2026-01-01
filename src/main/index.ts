@@ -117,6 +117,11 @@ if (gotTheLock) {
       console.error("Failed to create tray icon:", err);
     }
 
+    // Hide dock icon for all macOS builds (Agent app)
+    if (process.platform === "darwin") {
+      app.dock.hide();
+    }
+
     // Detect browsers on startup (non-blocking)
     browserManager.detectBrowsers().catch((err) => {
       console.error("Failed to detect browsers:", err);
@@ -141,8 +146,8 @@ if (gotTheLock) {
 
     createWindow();
 
-    // Check for updates on startup (only in production) - non-blocking
-    if (!process.env.VITE_DEV_SERVER_URL && app.isPackaged) {
+    // Check for updates on startup (only in production, not in MAS) - non-blocking
+    if (!process.env.VITE_DEV_SERVER_URL && app.isPackaged && !isMAS) {
       setTimeout(() => {
         autoUpdater
           .checkForUpdates()

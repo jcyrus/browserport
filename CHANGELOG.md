@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-01-01
+
+### Fixed
+
+- **Dock Icon Visibility**: Configured app as `LSUIElement` (Agent app) for all macOS builds to prevent dock icon from appearing.
+  - Root Cause: Missing `LSUIElement` in `Info.plist` for standard builds, reliant only on programmatic hiding
+  - Impact: Application now correctly appears only in the menu bar/tray for all macOS users
+
 ## [0.1.12] - 2025-12-31
 
 ### Fixed
