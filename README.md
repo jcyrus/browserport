@@ -2,6 +2,8 @@
 
 **BrowserPort** is a modern, cross-platform desktop utility that gives you control over your links.
 
+![BrowserPort Screenshot](docs/screenshot.webp)
+
 Instead of opening every link in the same default browser, BrowserPort registers itself as your OS default. When you click a link in Slack, Discord, or your Terminal, BrowserPort appears as a lightweight, floating widget, letting you instantly choose the right browser for the job.
 
 ## Why?
@@ -23,6 +25,32 @@ BrowserPort solves the "Work Link vs. Personal Browser" dilemma.
 - **Modern Widget UI**: Floating, centered, always-on-top interface inspired by Raycast/Spotlight
 - **Keyboard Navigation**: Full keyboard support with arrow keys, numbers, and shortcuts
 - **Secure Architecture**: Built with Electron security best practices
+
+## Installation
+
+### macOS
+
+1. Download the latest release (`.dmg` or `.app`).
+2. Drag BrowserPort to your Applications folder.
+3. Open BrowserPort.
+4. When prompted, set BrowserPort as your default browser.
+
+### Windows
+
+1. Download the latest installer (`.exe`).
+2. Run the installer.
+3. Set BrowserPort as your default browser in Windows Settings.
+
+## Usage
+
+Once installed and set as your default browser:
+
+1. Click any link in an external application (Slack, Discord, Terminal, etc.).
+2. The BrowserPort window will appear.
+3. Select the browser you want to open the link with:
+   - Click the browser icon.
+   - Use the arrow keys and press Enter.
+   - Press the corresponding number key (1-9).
 
 ## Tech Stack
 
@@ -84,4 +112,4 @@ This application follows Electron security best practices:
 
 ## License
 
-BSD-3-Clause
+[BSD-3-Clause](LICENSE)

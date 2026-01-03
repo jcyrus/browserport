@@ -13,6 +13,10 @@
 	<!-- Network access for update checks and browser detection -->
 	<key>com.apple.security.network.client</key>
 	<true/>
+	
+	<!-- Allow user to select files/folders for download or opening -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
 </dict>
 </plist>
 
