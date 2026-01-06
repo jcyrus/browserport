@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { OnboardingScreen } from "./OnboardingScreen";
 
 interface Browser {
   id: string;
@@ -21,6 +22,8 @@ function App() {
   const [url, setUrl] = useState<string>("");
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [appVersion, setAppVersion] = useState<string>("");
   const [updateState, setUpdateState] = useState<UpdateState>({
     available: false,
     downloading: false,
@@ -88,6 +91,14 @@ function App() {
         version: info.version,
       }));
     });
+
+    // Listen for onboarding requests
+    globalThis.electronAPI.onShowOnboarding(() => {
+      setShowOnboarding(true);
+    });
+
+    // Get app version
+    globalThis.electronAPI.getAppVersion().then(setAppVersion).catch(console.error);
   }, []);
 
   const handleLaunch = useCallback(
@@ -224,6 +235,25 @@ function App() {
     };
     return emojiMap[browserId.toLowerCase()] ?? "🌐";
   };
+
+  const handleDismissOnboarding = async () => {
+    setShowOnboarding(false);
+    try {
+      await globalThis.electronAPI.dismissOnboarding();
+    } catch (error) {
+      console.error("Failed to dismiss onboarding:", error);
+    }
+  };
+
+  // Show onboarding if requested
+  if (showOnboarding) {
+    return (
+      <OnboardingScreen
+        version={appVersion}
+        onDismiss={handleDismissOnboarding}
+      />
+    );
+  }
 
   if (loading) {
     return (

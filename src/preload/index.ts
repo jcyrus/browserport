@@ -41,6 +41,11 @@ export interface ElectronAPI {
   onUpdateError: (callback: (error: string) => void) => void;
   onDownloadProgress: (callback: (progress: DownloadProgress) => void) => void;
   onUpdateDownloaded: (callback: (info: UpdateInfo) => void) => void;
+  // Onboarding
+  onShowOnboarding: (callback: () => void) => void;
+  openSystemSettings: () => Promise<void>;
+  dismissOnboarding: () => Promise<void>;
+  getAppVersion: () => Promise<string>;
 }
 
 // Expose protected methods that allow the renderer process to interact with electron
@@ -78,4 +83,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
       callback(info)
     );
   },
+  // Onboarding
+  onShowOnboarding: (callback: () => void) => {
+    ipcRenderer.on("show-onboarding", () => callback());
+  },
+  openSystemSettings: () => ipcRenderer.invoke("open-system-settings"),
+  dismissOnboarding: () => ipcRenderer.invoke("dismiss-onboarding"),
+  getAppVersion: () => ipcRenderer.invoke("get-app-version"),
 } satisfies ElectronAPI);

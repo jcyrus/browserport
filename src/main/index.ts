@@ -84,10 +84,38 @@ process.env.VITE_PUBLIC = app.isPackaged
   : path.join(process.env.DIST, "../public");
 
 let mainWindow: BrowserWindow | null = null;
+let onboardingWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let pendingUrl: string | null = null;
 let updateCheckResult: UpdateInfo | null = null; // Store the last update check result
 const browserManager = new BrowserManager();
+
+// Config file path for storing onboarding state
+const configPath = path.join(app.getPath("userData"), "config.json");
+
+interface AppConfig {
+  hasSeenOnboarding: boolean;
+}
+
+function loadConfig(): AppConfig {
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, "utf-8");
+      return JSON.parse(data) as AppConfig;
+    }
+  } catch (err) {
+    console.error("Failed to load config:", err);
+  }
+  return { hasSeenOnboarding: false };
+}
+
+function saveConfig(config: AppConfig): void {
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  } catch (err) {
+    console.error("Failed to save config:", err);
+  }
+}
 
 // Ensure single instance
 const gotTheLock = app.requestSingleInstanceLock();
@@ -109,6 +137,9 @@ if (gotTheLock) {
 
   // App initialization - use event-based approach to avoid blocking
   app.whenReady().then(() => {
+    // Create Application Menu (required for App Store)
+    createApplicationMenu();
+
     // Create Tray Icon with error handling
     try {
       createTray();
@@ -145,6 +176,12 @@ if (gotTheLock) {
     }
 
     createWindow();
+
+    // Show onboarding on first launch
+    const config = loadConfig();
+    if (!config.hasSeenOnboarding) {
+      showOnboardingWindow();
+    }
 
     // Check for updates on startup (only in production, not in MAS) - non-blocking
     if (!process.env.VITE_DEV_SERVER_URL && app.isPackaged && !isMAS) {
@@ -355,6 +392,12 @@ function createTray() {
     },
     { type: "separator" },
     {
+      label: "How to Use...",
+      click: () => {
+        showOnboardingWindow();
+      },
+    },
+    {
       label: "Check for Updates...",
       click: () => {
         handleUpdateCheck().catch(console.error);
@@ -455,6 +498,143 @@ function showWindowWithUrl(url: string) {
   mainWindow.focus();
 }
 
+// Create macOS application menu (required for App Store)
+function createApplicationMenu() {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: app.name,
+      submenu: [
+        {
+          label: `About ${app.name}`,
+          click: () => {
+            const appIconPath = path.join(
+              process.env.VITE_PUBLIC ?? "",
+              "app-icon.png"
+            );
+            const appIcon = nativeImage.createFromPath(appIconPath);
+
+            dialog
+              .showMessageBox({
+                title: `About ${app.name}`,
+                message: `${app.name} v${version}`,
+                detail:
+                  "A cross-platform browser picker.\n\nCreated by @jCyrus.\n\nhttps://jcyrus.com/",
+                buttons: ["OK"],
+                icon: appIcon,
+              })
+              .catch(console.error);
+          },
+        },
+        { type: "separator" },
+        {
+          label: "How to Use...",
+          click: () => showOnboardingWindow(),
+        },
+        { type: "separator" },
+        {
+          label: "Check for Updates...",
+          click: () => {
+            handleUpdateCheck().catch(console.error);
+          },
+        },
+        { type: "separator" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "Window",
+      submenu: [{ role: "minimize" }, { role: "close" }],
+    },
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "BrowserPort on GitHub",
+          click: () => {
+            shell.openExternal("https://github.com/jcyrus/browserport");
+          },
+        },
+        {
+          label: "Report an Issue",
+          click: () => {
+            shell.openExternal("https://github.com/jcyrus/browserport/issues");
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+// Create and show onboarding window
+function showOnboardingWindow() {
+  if (onboardingWindow) {
+    onboardingWindow.focus();
+    return;
+  }
+
+  // Show dock icon when onboarding is visible (for app menu)
+  if (process.platform === "darwin") {
+    app.dock.show();
+  }
+
+  onboardingWindow = new BrowserWindow({
+    width: 600,
+    height: 500,
+    minWidth: 500,
+    minHeight: 400,
+    title: "Welcome to BrowserPort",
+    titleBarStyle: "hiddenInset",
+    trafficLightPosition: { x: 16, y: 16 },
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "../preload/index.mjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  // Load the app and send show-onboarding message
+  if (process.env.VITE_DEV_SERVER_URL) {
+    onboardingWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+  } else {
+    onboardingWindow.loadFile(path.join(process.env.DIST ?? "", "index.html"));
+  }
+
+  onboardingWindow.once("ready-to-show", () => {
+    onboardingWindow?.show();
+    // Send message to show onboarding UI
+    onboardingWindow?.webContents.send("show-onboarding");
+  });
+
+  onboardingWindow.on("closed", () => {
+    onboardingWindow = null;
+    // Hide dock icon again when onboarding closes
+    if (process.platform === "darwin") {
+      app.dock.hide();
+    }
+  });
+}
+
 // IPC Handlers
 ipcMain.handle("get-browsers", async () => {
   return browserManager.getBrowsers();
@@ -538,4 +718,25 @@ ipcMain.handle("download-update", async () => {
 
 ipcMain.handle("install-update", async () => {
   autoUpdater.quitAndInstall();
+});
+
+// Onboarding IPC handlers
+ipcMain.handle("dismiss-onboarding", async () => {
+  const config = loadConfig();
+  config.hasSeenOnboarding = true;
+  saveConfig(config);
+  onboardingWindow?.close();
+});
+
+ipcMain.handle("open-system-settings", async () => {
+  // Open System Settings > Desktop & Dock on macOS
+  if (process.platform === "darwin") {
+    await shell.openExternal(
+      "x-apple.systempreferences:com.apple.Desktop-Settings.extension"
+    );
+  }
+});
+
+ipcMain.handle("get-app-version", async () => {
+  return version;
 });

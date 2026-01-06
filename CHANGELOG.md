@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16] - 2026-01-06
+
+### Added
+
+- **Onboarding Window**: Added step-by-step instructions window shown on first launch to satisfy App Store Guideline 4.
+  - Implementation: `src/renderer/OnboardingScreen.tsx`
+  - Accessible via tray menu → "How to Use..." or app menu → "How to Use..."
+  - First-launch detection with config persistence in `config.json`
+- **macOS Application Menu**: Added standard BrowserPort, Edit, Window, Help menus.
+  - Implementation: `src/main/index.ts` (`createApplicationMenu()`)
+  - Satisfies App Store requirement for App Menu presence
+  - Dock icon temporarily shows when onboarding window is open (for menu visibility)
+- **Tray Menu Enhancement**: Added "How to Use..." option to tray context menu.
+- **Dynamic Browser Icons**: Onboarding "Pick Your Browser" step shows user's installed browsers.
+
+### Fixed
+
+- **App Store Guideline 4 Rejection**: Resolved "missing interface window with instructions" and "missing App Menu" feedback.
+- **App Freezing**: Reverted to event-based `app.whenReady().then()` initialization pattern to prevent main process blocking.
+
 ## [0.1.15] - 2026-01-01
 
 ### Fixed
