@@ -8,7 +8,7 @@ import {
   dialog,
   shell,
 } from "electron";
-import { autoUpdater, UpdateInfo } from "electron-updater";
+import type { UpdateInfo } from "electron-updater";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
@@ -24,52 +24,70 @@ const isMAS = !!(process as NodeJS.Process & { mas?: boolean }).mas;
 // App Store URL - Update this with your actual App Store ID after approval
 const APP_STORE_URL = "macappstore://apps.apple.com/app/id0000000000"; // TODO: Replace with actual App Store ID
 
-// Configure auto-updater
-autoUpdater.autoDownload = false; // User controls when to download
-autoUpdater.autoInstallOnAppQuit = true;
+// Conditionally import and configure auto-updater (NOT for Mac App Store builds)
+// Apple Guideline 2.4.5(vii): Mac App Store apps must not provide update checks outside the App Store
+let autoUpdater: typeof import("electron-updater").autoUpdater | null = null;
 
-// Auto-updater event handlers
-autoUpdater.on("checking-for-update", () => {
-  console.log("Checking for updates...");
-});
+if (!isMAS) {
+  // Dynamic import for non-MAS builds only
+  import("electron-updater")
+    .then((module) => {
+      autoUpdater = module.autoUpdater;
+      autoUpdater.autoDownload = false; // User controls when to download
+      autoUpdater.autoInstallOnAppQuit = true;
+      setupAutoUpdaterEvents();
+    })
+    .catch((err) => {
+      console.error("Failed to load electron-updater:", err);
+    });
+}
 
-autoUpdater.on("update-available", (info) => {
-  console.log("Update available:", info.version);
-  updateCheckResult = info; // Store the update info
-  if (mainWindow) {
-    mainWindow.webContents.send("update-available", info);
-  }
-});
+// Auto-updater event handlers - setup function called after dynamic import
+function setupAutoUpdaterEvents() {
+  if (!autoUpdater) return;
 
-autoUpdater.on("update-not-available", (info) => {
-  console.log("Update not available:", info.version);
-  updateCheckResult = null; // Clear any stored update info
-  if (mainWindow) {
-    mainWindow.webContents.send("update-not-available", info);
-  }
-});
+  autoUpdater.on("checking-for-update", () => {
+    console.log("Checking for updates...");
+  });
 
-autoUpdater.on("error", (err) => {
-  console.error("Update error:", err);
-  if (mainWindow) {
-    mainWindow.webContents.send("update-error", err.message);
-  }
-});
+  autoUpdater.on("update-available", (info) => {
+    console.log("Update available:", info.version);
+    updateCheckResult = info; // Store the update info
+    if (mainWindow) {
+      mainWindow.webContents.send("update-available", info);
+    }
+  });
 
-autoUpdater.on("download-progress", (progressObj) => {
-  console.log(`Download progress: ${progressObj.percent}%`);
-  if (mainWindow) {
-    mainWindow.webContents.send("download-progress", progressObj);
-  }
-});
+  autoUpdater.on("update-not-available", (info) => {
+    console.log("Update not available:", info.version);
+    updateCheckResult = null; // Clear any stored update info
+    if (mainWindow) {
+      mainWindow.webContents.send("update-not-available", info);
+    }
+  });
 
-autoUpdater.on("update-downloaded", (info) => {
-  console.log("Update downloaded:", info.version);
-  updateCheckResult = null; // Clear stored result after successful download
-  if (mainWindow) {
-    mainWindow.webContents.send("update-downloaded", info);
-  }
-});
+  autoUpdater.on("error", (err) => {
+    console.error("Update error:", err);
+    if (mainWindow) {
+      mainWindow.webContents.send("update-error", err.message);
+    }
+  });
+
+  autoUpdater.on("download-progress", (progressObj) => {
+    console.log(`Download progress: ${progressObj.percent}%`);
+    if (mainWindow) {
+      mainWindow.webContents.send("download-progress", progressObj);
+    }
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    console.log("Update downloaded:", info.version);
+    updateCheckResult = null; // Clear stored result after successful download
+    if (mainWindow) {
+      mainWindow.webContents.send("update-downloaded", info);
+    }
+  });
+}
 
 // The built directory structure:
 // ├─┬─┬ dist
@@ -184,10 +202,11 @@ if (gotTheLock) {
     }
 
     // Check for updates on startup (only in production, not in MAS) - non-blocking
-    if (!process.env.VITE_DEV_SERVER_URL && app.isPackaged && !isMAS) {
+    // Apple Guideline 2.4.5(vii): No update checks for Mac App Store builds
+    if (!process.env.VITE_DEV_SERVER_URL && app.isPackaged && !isMAS && autoUpdater) {
       setTimeout(() => {
         autoUpdater
-          .checkForUpdates()
+          ?.checkForUpdates()
           .then((result) => {
             // Only store if there's actually a newer version
             if (
@@ -257,10 +276,37 @@ function compareVersions(v1: string, v2: string): number {
 }
 
 async function handleUpdateCheck() {
+  // For Mac App Store builds, redirect to App Store (no update checking allowed)
+  // Apple Guideline 2.4.5(vii)
+  if (isMAS) {
+    const response = await dialog.showMessageBox({
+      title: "Updates",
+      message: "Check for updates in the Mac App Store",
+      detail: "Mac App Store apps are updated through the App Store.",
+      buttons: ["Open App Store", "Cancel"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+
+    if (response.response === 0) {
+      await shell.openExternal(APP_STORE_URL);
+    }
+    return;
+  }
+
   if (!app.isPackaged) {
     await dialog.showMessageBox({
       title: "Updates",
       message: "Updates are only available in production builds",
+      buttons: ["OK"],
+    });
+    return;
+  }
+
+  if (!autoUpdater) {
+    await dialog.showMessageBox({
+      title: "Update Error",
+      message: "Update system is not available",
       buttons: ["OK"],
     });
     return;
@@ -278,23 +324,6 @@ async function handleUpdateCheck() {
         message: `You're running the latest version (v${version})`,
         buttons: ["OK"],
       });
-      return;
-    }
-
-    // For Mac App Store builds, redirect to App Store instead of downloading
-    if (isMAS) {
-      const response = await dialog.showMessageBox({
-        title: "Update Available",
-        message: `Version ${result.updateInfo.version} is available`,
-        detail: "Would you like to open the App Store to update?",
-        buttons: ["Open App Store", "Later"],
-        defaultId: 0,
-        cancelId: 1,
-      });
-
-      if (response.response === 0) {
-        await shell.openExternal(APP_STORE_URL);
-      }
       return;
     }
 
@@ -397,12 +426,14 @@ function createTray() {
         showOnboardingWindow();
       },
     },
-    {
+    // Only show "Check for Updates" for non-MAS builds
+    // Apple Guideline 2.4.5(vii): Mac App Store apps must not provide update UI
+    ...(!isMAS ? [{
       label: "Check for Updates...",
       click: () => {
         handleUpdateCheck().catch(console.error);
       },
-    },
+    }] : []),
     { type: "separator" },
     { label: "Quit", click: () => app.quit() },
   ]);
@@ -530,13 +561,17 @@ function createApplicationMenu() {
           label: "How to Use...",
           click: () => showOnboardingWindow(),
         },
-        { type: "separator" },
-        {
-          label: "Check for Updates...",
-          click: () => {
-            handleUpdateCheck().catch(console.error);
-          },
-        },
+        // Only show "Check for Updates" for non-MAS builds
+        // Apple Guideline 2.4.5(vii): Mac App Store apps must not provide update UI
+        ...(!isMAS ? [
+          { type: "separator" } as Electron.MenuItemConstructorOptions,
+          {
+            label: "Check for Updates...",
+            click: () => {
+              handleUpdateCheck().catch(console.error);
+            },
+          } as Electron.MenuItemConstructorOptions,
+        ] : []),
         { type: "separator" },
         { role: "hide" },
         { role: "hideOthers" },
@@ -665,14 +700,31 @@ ipcMain.handle("hide-window", async () => {
 });
 
 // Update handlers
+// Apple Guideline 2.4.5(vii): Mac App Store apps must not provide update functionality
 ipcMain.handle("check-for-updates", async () => {
   try {
+    // For MAS builds, update checks are not allowed
+    if (isMAS) {
+      return {
+        success: false,
+        error: "Updates are handled through the Mac App Store",
+      };
+    }
+
     if (!app.isPackaged) {
       return {
         success: false,
         error: "Updates are only available in production builds",
       };
     }
+
+    if (!autoUpdater) {
+      return {
+        success: false,
+        error: "Update system is not available",
+      };
+    }
+
     const result = await autoUpdater.checkForUpdates();
     // Only store and return update info if it's actually a newer version
     if (
@@ -697,11 +749,26 @@ ipcMain.handle("check-for-updates", async () => {
 
 ipcMain.handle("download-update", async () => {
   try {
+    // For MAS builds, updates are not allowed
+    if (isMAS) {
+      return {
+        success: false,
+        error: "Updates are handled through the Mac App Store",
+      };
+    }
+
     // Ensure we have a valid update to download
     if (!updateCheckResult) {
       return {
         success: false,
         error: "No update available. Please check for updates first.",
+      };
+    }
+
+    if (!autoUpdater) {
+      return {
+        success: false,
+        error: "Update system is not available",
       };
     }
 
@@ -717,6 +784,10 @@ ipcMain.handle("download-update", async () => {
 });
 
 ipcMain.handle("install-update", async () => {
+  // For MAS builds, installation is not allowed
+  if (isMAS || !autoUpdater) {
+    return;
+  }
   autoUpdater.quitAndInstall();
 });
 
@@ -739,4 +810,9 @@ ipcMain.handle("open-system-settings", async () => {
 
 ipcMain.handle("get-app-version", async () => {
   return version;
+});
+
+// Expose whether this is a Mac App Store build so renderer can hide update UI
+ipcMain.handle("is-mas-build", async () => {
+  return isMAS;
 });

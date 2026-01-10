@@ -46,6 +46,8 @@ export interface ElectronAPI {
   openSystemSettings: () => Promise<void>;
   dismissOnboarding: () => Promise<void>;
   getAppVersion: () => Promise<string>;
+  // Mac App Store detection (for hiding update UI)
+  isMASBuild: () => Promise<boolean>;
 }
 
 // Expose protected methods that allow the renderer process to interact with electron
@@ -90,4 +92,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   openSystemSettings: () => ipcRenderer.invoke("open-system-settings"),
   dismissOnboarding: () => ipcRenderer.invoke("dismiss-onboarding"),
   getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  // Mac App Store detection
+  isMASBuild: () => ipcRenderer.invoke("is-mas-build"),
 } satisfies ElectronAPI);

@@ -24,6 +24,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [appVersion, setAppVersion] = useState<string>("");
+  const [isMASBuild, setIsMASBuild] = useState<boolean>(false);
   const [updateState, setUpdateState] = useState<UpdateState>({
     available: false,
     downloading: false,
@@ -51,46 +52,54 @@ function App() {
       setSelectedIndex(0);
     });
 
-    // Listen for update events
-    globalThis.electronAPI.onUpdateAvailable((info) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        available: true,
-        version: info.version,
-      }));
-    });
+    // Check if this is a Mac App Store build
+    // If so, we don't set up update listeners (Apple Guideline 2.4.5(vii))
+    globalThis.electronAPI.isMASBuild().then((isMAS) => {
+      setIsMASBuild(isMAS);
+      
+      // Only set up update listeners for non-MAS builds
+      if (!isMAS) {
+        globalThis.electronAPI.onUpdateAvailable((info) => {
+          setUpdateState((prev) => ({
+            ...prev,
+            available: true,
+            version: info.version,
+          }));
+        });
 
-    globalThis.electronAPI.onUpdateNotAvailable(() => {
-      setUpdateState((prev) => ({
-        ...prev,
-        available: false,
-      }));
-    });
+        globalThis.electronAPI.onUpdateNotAvailable(() => {
+          setUpdateState((prev) => ({
+            ...prev,
+            available: false,
+          }));
+        });
 
-    globalThis.electronAPI.onUpdateError((error) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        error,
-        downloading: false,
-      }));
-    });
+        globalThis.electronAPI.onUpdateError((error) => {
+          setUpdateState((prev) => ({
+            ...prev,
+            error,
+            downloading: false,
+          }));
+        });
 
-    globalThis.electronAPI.onDownloadProgress((progress) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        downloading: true,
-        progress: Math.round(progress.percent),
-      }));
-    });
+        globalThis.electronAPI.onDownloadProgress((progress) => {
+          setUpdateState((prev) => ({
+            ...prev,
+            downloading: true,
+            progress: Math.round(progress.percent),
+          }));
+        });
 
-    globalThis.electronAPI.onUpdateDownloaded((info) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        downloading: false,
-        downloaded: true,
-        version: info.version,
-      }));
-    });
+        globalThis.electronAPI.onUpdateDownloaded((info) => {
+          setUpdateState((prev) => ({
+            ...prev,
+            downloading: false,
+            downloaded: true,
+            version: info.version,
+          }));
+        });
+      }
+    }).catch(console.error);
 
     // Listen for onboarding requests
     globalThis.electronAPI.onShowOnboarding(() => {
@@ -295,8 +304,9 @@ function App() {
           )}
         </div>
 
-        {/* Update Notification */}
-        {updateState.available && !updateState.downloaded && (
+        {/* Update Notification - Only shown for non-MAS builds */}
+        {/* Apple Guideline 2.4.5(vii): Mac App Store apps must not provide update UI */}
+        {!isMASBuild && updateState.available && !updateState.downloaded && (
           <div className="mb-4 bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -339,7 +349,7 @@ function App() {
           </div>
         )}
 
-        {updateState.downloaded && (
+        {!isMASBuild && updateState.downloaded && (
           <div className="mb-4 bg-green-600/20 border border-green-500/30 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -368,7 +378,7 @@ function App() {
           </div>
         )}
 
-        {updateState.error && (
+        {!isMASBuild && updateState.error && (
           <div className="mb-4 bg-red-600/20 border border-red-500/30 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm text-red-100">{updateState.error}</p>

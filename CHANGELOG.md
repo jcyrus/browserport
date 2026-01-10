@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-01-10
+
+### Fixed
+
+- **Apple Guideline 2.4.5(vii) Rejection**: Removed all update checking and download functionality from Mac App Store builds.
+  - Root Cause: electron-updater was being imported and configured unconditionally, and "Check for Updates" menu items were visible in MAS builds
+  - Implementation:
+    - `src/main/index.ts`: Conditionally import electron-updater only for non-MAS builds using dynamic imports
+    - `src/main/index.ts`: Hide "Check for Updates" menu items from tray and application menu in MAS builds
+    - `src/main/index.ts`: Return appropriate error responses from update IPC handlers for MAS builds
+    - `src/preload/index.ts`: Added `isMASBuild()` API for renderer to detect MAS builds
+    - `src/renderer/App.tsx`: Conditionally hide all update notification UI components in MAS builds
+  - Impact: Mac App Store version will not show any update-related UI or perform update checks
+
 ## [0.1.16] - 2026-01-06
 
 ### Added
