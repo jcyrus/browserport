@@ -17,7 +17,7 @@
     "build:mas": "tsc && vite build && electron-builder --mac mas --universal"
   },
   "dependencies": {
-    "electron-updater": "^6.6.2",
+    "electron-updater": "^6.7.3",
     "react": "^19.2.3",
     "react-dom": "^18.2.0"
   },
