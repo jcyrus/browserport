@@ -31,7 +31,7 @@
     "autoprefixer": "^10.4.16",
     "electron": "^35.7.5",
     "electron-builder": "^24.9.1",
-    "eslint": "^8.55.0",
+    "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.26",
     "postcss": "^8.4.32",
