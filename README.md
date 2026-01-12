@@ -1,5 +1,7 @@
 # BrowserPort
 
+[![Dependency Review](https://github.com/jcyrus/BrowserPort/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/jcyrus/BrowserPort/actions/workflows/dependency-review.yml)
+
 **BrowserPort** is a modern, cross-platform desktop utility that gives you control over your links.
 
 ![BrowserPort Screenshot](docs/screenshot.webp)

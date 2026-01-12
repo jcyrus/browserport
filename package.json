@@ -1,6 +1,6 @@
 {
   "name": "browserport",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "A cross-platform browser picker utility",
   "main": "dist-electron/main/index.js",
   "type": "module",
@@ -29,7 +29,7 @@
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
-    "electron": "^28.0.0",
+    "electron": "^35.7.5",
     "electron-builder": "^24.9.1",
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -37,7 +37,7 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.3",
-    "vite": "^5.0.8",
+    "vite": "^6.0.0",
     "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.5"
   },

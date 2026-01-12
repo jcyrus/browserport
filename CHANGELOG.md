@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-01-12
+
+### Security
+
+- **Fixed: ASAR Integrity Bypass (GHSA-vmqv-hx8q-j7mg)**: Upgraded `electron` from v28 to v35.7.5+ to patch resource modification vulnerability.
+- **Fixed: esbuild Dev Server CORS (GHSA-67mh-4wv8-2f99)**: Upgraded `vite` from v5 to v6.0.0+ to patch development server request vulnerability.
+- **Added: Dependabot Configuration**: Enabled weekly automated dependency updates for npm packages and GitHub Actions.
+  - Implementation: `.github/dependabot.yml`
+- **Added: Dependency Review Workflow**: Pull requests now automatically scanned for vulnerabilities.
+  - Implementation: `.github/workflows/dependency-review.yml`
+  - Impact: PRs introducing vulnerable dependencies will fail checks
+
 ## [0.1.17] - 2026-01-10
 
 ### Fixed
