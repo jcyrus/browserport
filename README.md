@@ -2,6 +2,8 @@
 
 [![Dependency Review](https://github.com/jcyrus/BrowserPort/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/jcyrus/BrowserPort/actions/workflows/dependency-review.yml)
 
+[![Download on the Mac App Store](https://tools.applemediaservices.com/api/badges/download-on-the-mac-app-store/black/en-us?size=250x83)](https://apps.apple.com/ph/app/browserport/id6756837263)
+
 **BrowserPort** is a modern, cross-platform desktop utility that gives you control over your links.
 
 ![BrowserPort Screenshot](docs/screenshot.webp)
@@ -31,6 +33,10 @@ BrowserPort solves the "Work Link vs. Personal Browser" dilemma.
 ## Installation
 
 ### macOS
+
+[![Download on the Mac App Store](https://tools.applemediaservices.com/api/badges/download-on-the-mac-app-store/black/en-us?size=250x83)](https://apps.apple.com/ph/app/browserport/id6756837263?mt=12)
+
+**Manual Installation:**
 
 1. Download the latest release (`.dmg` or `.app`).
 2. Drag BrowserPort to your Applications folder.
@@ -93,7 +99,7 @@ BrowserPort/
 │   ├── main/               # Electron main process
 │   │   ├── index.ts        # Main entry point
 │   │   └── browserManager.ts  # Browser detection logic
-│   ├── preload/            # Preload scripts
+│   ├── preload/            # Preload scripts`
 │   │   └── index.ts        # contextBridge API
 │   └── renderer/           # React UI
 │       ├── App.tsx         # Main UI component
