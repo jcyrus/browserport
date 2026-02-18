@@ -58,3 +58,24 @@ jobs:
           files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-distribution:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Homebrew Tap update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.TAP_UPDATE_TOKEN }}
+          repository: jcyrus/homebrew-tap
+          event-type: update-formula
+          client-payload: '{"project": "browserport", "version": "${{ github.ref_name }}"}'
+
+      - name: Trigger Scoop Bucket update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.TAP_UPDATE_TOKEN }}
+          repository: jcyrus/scoop-bucket
+          event-type: update-manifest
+          client-payload: '{"project": "browserport", "version": "${{ github.ref_name }}"}'
