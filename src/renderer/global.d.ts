@@ -1,6 +1,6 @@
 import { ElectronAPI } from '../preload/index'
 
 declare global {
-  // eslint-disable-next-line no-var
+  // `var` is required here: global augmentation does not accept let/const.
   var electronAPI: ElectronAPI
 }
