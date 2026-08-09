@@ -14,6 +14,26 @@ updates:
     labels:
       - "dependencies"
     groups:
+      # Must stay first: Dependabot places a dependency in the first group it
+      # matches, and these are all devDependencies, so the broader
+      # development-dependencies group below would otherwise claim them.
+      #
+      # react and react-dom must move together. They were split once — react
+      # was bumped 18 -> 19 while react-dom stayed at 18, and react-dom@18
+      # dereferences an internals symbol react@19 no longer exports, so React
+      # never mounted and the picker window shipped blank. Note this group
+      # includes "major", which neither group below does; that omission is
+      # exactly why the two were raised as separate PRs.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
       development-dependencies:
         dependency-type: "development"
         update-types:
