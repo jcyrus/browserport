@@ -64,10 +64,6 @@
             "x64",
             "arm64"
           ]
-        },
-        {
-          "target": "mas",
-          "arch": "universal"
         }
       ],
       "hardenedRuntime": true,
