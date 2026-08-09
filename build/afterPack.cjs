@@ -10,14 +10,24 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-// Languages to keep, matching `build.electronLanguages` in package.json.
 // "Base" is not a language; it holds non-localized resources and must stay.
-const KEEP = new Set(["en", "Base"]);
+const ALWAYS_KEEP = ["Base"];
 
 exports.default = async function afterPack(context) {
   if (context.electronPlatformName !== "darwin" && context.electronPlatformName !== "mas") {
     return;
   }
+
+  // Derived from build.electronLanguages rather than duplicated, so the two
+  // cannot drift. Mirrors electron-builder: no list configured means keep all.
+  const configured =
+    context.packager.platformSpecificBuildOptions?.electronLanguages ??
+    context.packager.config?.electronLanguages;
+  const wanted = (Array.isArray(configured) ? configured : [configured]).filter(Boolean);
+  if (wanted.length === 0) {
+    return;
+  }
+  const keep = new Set([...wanted, ...ALWAYS_KEEP]);
 
   const resourcesDir = path.join(
     context.appOutDir,
@@ -39,7 +49,7 @@ exports.default = async function afterPack(context) {
 
   for (const entry of fs.readdirSync(resourcesDir)) {
     if (!entry.endsWith(".lproj")) continue;
-    if (KEEP.has(entry.slice(0, -".lproj".length))) continue;
+    if (keep.has(entry.slice(0, -".lproj".length))) continue;
 
     const target = path.join(resourcesDir, entry);
     for (const file of fs.readdirSync(target)) {
