@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Homebrew Tap update
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.TAP_UPDATE_TOKEN }}
           repository: jcyrus/homebrew-tap
@@ -73,7 +73,7 @@ jobs:
           client-payload: '{"project": "browserport", "version": "${{ github.ref_name }}"}'
 
       - name: Trigger Scoop Bucket update
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.TAP_UPDATE_TOKEN }}
           repository: jcyrus/scoop-bucket
