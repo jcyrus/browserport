@@ -8,9 +8,19 @@ import reactRefresh from "eslint-plugin-react-refresh";
 // ESLint 9 flat config, migrated from .eslintrc.cjs.
 export default [
   {
-    ignores: ["dist/**", "dist-electron/**", "release/**", "build/afterPack.cjs"],
+    ignores: ["dist/**", "dist-electron/**", "release/**"],
   },
   js.configs.recommended,
+  {
+    // electron-builder hooks: CommonJS, executed by Node during packaging.
+    // Without this they fall through to js.configs.recommended with no globals
+    // defined, so `require`/`process`/`console` all report as no-undef.
+    files: ["build/**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: { ...globals.node },
+    },
+  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
